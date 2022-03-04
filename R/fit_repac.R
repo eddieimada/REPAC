@@ -39,48 +39,52 @@
 #' @export
 fit_repac <- function(se, gene_name, group, covariates=NULL, method="BH"){
     # Order PAS on "+" strand
+    rowData(se)$gene_name <- gene_name
     se <- sort(se)
     idx <- c(names(se[strand(se) == "+"]), rev(names(se[strand(se) == "-"])))
     se <- se[idx,]
-    n <- table(gene_name) > 1
+    rownames(se) <- unlist(tapply(rowData(se)$gene_name, rowData(se)$gene_name,
+                                  function(x){paste(x, sprintf("%02d", 1:length(x)), sep="_")})[unique(rowData(se)$gene_name)])
+    n <- table(rowData(se)$gene_name) > 1
     keep <- names(n[n == TRUE])
-    se <- se[gene_name %in% keep,]
-    genes <- unique(gene_name)
+    se <- se[rowData(se)$gene_name %in% keep,]
+    genes <- unique(rowData(se)$gene_name)
     results <- furrr::future_map_dfr(genes, function(id){
-    # Get gene count + pa sites
-        mat <- SummarizedExperiment::assays(se)[[1]][which(gene_name == id),]
-    mat <- t(mat+1)
-    ### Select reference pa site
-    ref <- 1
-    cd <- SummarizedExperiment::colData(se)
-    res <- purrr::map_dfr(seq_along(colnames(mat)[-1]), function(idx){
-        nm <- colnames(mat)[idx+1]
-        ref.nms <- colnames(mat)[ref]
-        #weight <- gene.weight[colnames(mat)[ref],]
-        counts <- cbind(mat[,ref],mat[,idx+1])
-        comp <- compositions::acomp(counts)
-        icomp <- compositions::ilr(comp)[,1]
-        if (length(covariates) != 0) {
-        fmla <- reformulate(c(covariates, group), response = "icomp")
-        fit <- lm(fmla, data=model.frame(fmla, cd))
-        } else {
-        fmla <- reformulate(group, response = "icomp")
-        fit <- lm(fmla, data=model.frame(fmla, cd))
-        }
-        mod <- car::Anova(fit)
-        p.val <- mod[[group,"Pr(>F)"]]
-        if (p.val > 0.1) {
-            ref <<- idx+1
-        }
-        ci <- grep(group, names(fit$coefficients))
-        du <- compositions::ilrInv(fit$coefficients[1] + fit$coefficients[ci])[2] - ilrInv(fit$coefficients[1])[2]
-        cFC <- fit$coefficients[ci]
-        Ts <- round(summary(fit)$coefficients[[ci, "t value"]], 3)
-        tibble::tibble(gene_name=id, Ref=ref.nms, ID=nm, cFC=cFC, mDiff=du, "t"=Ts, p.val=p.val)
-    })
-    res$adj.p.val <- p.adjust(res$p.val, method = method)
-    res
-},.progress = TRUE)
+        print(id)
+        # Get gene count + pa sites
+        mat <- SummarizedExperiment::assays(se)[[1]][which(rowData(se)$gene_name == id),]
+        mat <- t(mat+1)
+        ### Select reference pa site
+        ref <- 1
+        cd <- SummarizedExperiment::colData(se)
+        res <- purrr::map_dfr(seq_along(colnames(mat)[-1]), function(idx){
+            nm <- colnames(mat)[idx+1]
+            ref.nms <- colnames(mat)[ref]
+            #weight <- gene.weight[colnames(mat)[ref],]
+            counts <- cbind(mat[,ref],mat[,idx+1])
+            comp <- compositions::acomp(counts)
+            icomp <- compositions::ilr(comp)[,1]
+            if (length(covariates) != 0) {
+                fmla <- reformulate(c(covariates, group), response = "icomp")
+                fit <- lm(fmla, data=model.frame(fmla, cd))
+            } else {
+                fmla <- reformulate(group, response = "icomp")
+                fit <- lm(fmla, data=model.frame(fmla, cd))
+            }
+            mod <- car::Anova(fit)
+            p.val <- mod[[group,"Pr(>F)"]]
+            if (p.val > 0.1) {
+                ref <<- idx+1
+            }
+            ci <- grep(group, names(fit$coefficients))
+            du <- compositions::ilrInv(fit$coefficients[1] + fit$coefficients[ci])[2] - ilrInv(fit$coefficients[1])[2]
+            cFC <- fit$coefficients[ci]
+            Ts <- round(summary(fit)$coefficients[[ci, "t value"]], 3)
+            tibble::tibble(gene_name=id, Ref=ref.nms, ID=nm, cFC=cFC, mDiff=du, "t"=Ts, p.val=p.val)
+        })
+        res$adj.p.val <- p.adjust(res$p.val, method = method)
+        res
+    },.progress = TRUE)
 
-return(results)
+    return(results)
 }

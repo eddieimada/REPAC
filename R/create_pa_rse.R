@@ -34,7 +34,7 @@
 #' create_pa_rse(organism = "mouse", project="SRP048707", annotation="mysites.bed")
 #'
 #' @export
-create_pa_rse <- function(organism=c("human", "mouse"), project=NULL, annotation=NULL, sample_id=NULL, bed_cols= c("chr", "start", "end", "ID", "score", "strand")) {
+create_pa_rse <- function(organism=c("human", "mouse"), project=NULL, annotation=NULL, sample_id=NULL, bed_cols= c("chr", "start", "end", "ID", "score", "strand"), prefix = tempdir()) {
     print("Retrieving metadata...")
     human_samples <- recount3::available_samples(organism = organism)
     metadata <- purrr::map_dfr(project, function(id){
@@ -59,16 +59,16 @@ create_pa_rse <- function(organism=c("human", "mouse"), project=NULL, annotation
         urls <- metadata$BigWigURL
     }
     print("Loading PA sites...")
-    apa_gr <- GenomicRanges::makeGRangesFromDataFrame(readr::read_tsv(annotation, col_names = bed_cols), keep.extra.columns = T)
-    names(apa_gr) <- paste0(seqnames(apa_gr), ":", start(apa_gr), "-", end(apa_gr))
+    apa_gr <- GenomicRanges::makeGRangesFromDataFrame(readr::read_tsv(annotation, col_names = bed_cols, show_col_types = F), keep.extra.columns = T)
+    names(apa_gr) <- paste0(GenomicRanges::seqnames(apa_gr), ":", GenomicRanges::start(apa_gr), "-", GenomicRanges::end(apa_gr))
     ord <- apa_gr
-    strand(ord) <- "*"
+    GenomicRanges::strand(ord) <- "*"
     apa_gr <- apa_gr[names(sort(ord))]
     print("Retrieving counts...")
     mat <- furrr::future_map_dfc(seq_along(urls), function(x) {
         y <- megadepth::get_coverage(urls[[x]], op = "sum",
                           annotation = annotation,
-                          prefix=file.path(tempdir(), basename(urls[[x]]))
+                          prefix=file.path(prefix, basename(urls[[x]]))
         )
         y <- sort(y)
         y$score
@@ -79,9 +79,9 @@ create_pa_rse <- function(organism=c("human", "mouse"), project=NULL, annotation
                        STATS=metadata$recount_qc.star.average_mapped_length,
                        FUN = "/"))
     se <- SummarizedExperiment::SummarizedExperiment(assays=list(counts=mat),
-                                colData = DataFrame(metadata),
+                                colData = S4Vectors::DataFrame(metadata),
                                 rowRanges = apa_gr
     )
-    rownames(se) <- se$ids
-    se <- se[sort(rownames(se))]
+    # rownames(se) <- se$ids
+    # se <- se[sort(rownames(se))]
 }
