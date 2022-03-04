@@ -38,6 +38,7 @@
 #'
 #' @export
 fit_repac <- function(se, gene_name, group, covariates=NULL, method="BH"){
+    # Order PAS on "+" strand
     se <- sort(se)
     idx <- c(names(se[strand(se) == "+"]), rev(names(se[strand(se) == "-"])))
     se <- se[idx,]

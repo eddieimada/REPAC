@@ -2,10 +2,11 @@ Package: REPAC
 Type: Package
 Title: Differential Alternative Polyadenylation Analysis From Compositions
 Version: 0.1.0
-Authors@R: c(person("Eddie", "Imada", role="aut"),
-	 person("Christopher", "Wilks", role="aut"),
-	 person("Ben", "Langmead", role="aut"),
-	 person("Luigi", "Marchionni", role="aut"))
+Authors@R: 
+    c(
+    person("Eddie", "Imada", role = c("aut", "cre"), 
+    email = "eimada@med.cornell.edu")
+    )
 Maintainer: Eddie Imada <eimada@med.conell.edu>
 Description: REPAC enables fast and scalable analysis of APA. REPAC
     relies on methods developed for compositional data to conduct

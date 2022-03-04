@@ -1,0 +1,22 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+The REPAC R/Bioconductor package implements the method described in
+Imada et al. to test for differential Polyadenylation Usage (DPU).
+
+## Instalation instructions
+
+Get the latest stable `R` release from
+[CRAN](http://cran.r-project.org/). Then run the following code:
+
+``` r
+if (!requireNamespace("devtools", quietly = TRUE)) {
+    install.packages("devtools")
+}
+
+devtools::install_github('eddieimada/REPAC')
+```
+
+## Citation
+
+Placeholder

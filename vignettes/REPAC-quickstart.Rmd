@@ -1,0 +1,79 @@
+---
+title: "REPAC quick start guide"
+author: 
+  - name: Eddie Luidy Imada
+    affiliation:
+    - &wcm Division of Computational and Systems Pathology, Department of Pathology and Laboratory Medicine, Weill Cornell Medicine.
+    email: eimada@med.cornell.edu
+output: 
+  BiocStyle::html_document:
+    self_contained: yes
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    code_folding: show
+date: "`r doc_date()`"
+package: "`r pkg_ver('recount3')`"
+vignette: >
+  %\VignetteIndexEntry{REPAC quick start guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Overview
+The `r Biocpkg('REPAC')` R/Bioconductor package provides an implementation of the method described in Imada et al (2022) for the detection of Differential Polyadenylation Usage (DPU).
+
+# Basics
+## Installing REPAC
+
+Get the latest stable `R` release from [CRAN](http://cran.r-project.org/). Then run the following code:
+
+```{r 'install', eval = FALSE}
+if (!requireNamespace("devtools", quietly = TRUE)) {
+    install.packages("devtools")
+}
+
+devtools::install_github('eddieimada/REPAC')
+```
+
+## recount3 integration
+
+The `r Biocpkg('REPAC')` package/method is designed to take advantage of the recount3 project by directly extracting expression information for over 750,000 samples.
+
+We recommend the user to get familiar with the project [**recount.bio**](https://LieberInstitute.github.io/recount3-docs) and `r Biocpkg('recount3')` R/Bioconductor package.
+
+# Quick start
+
+After installing `r Biocpkg('REPAC')` you can load the package.
+
+```{r 'start', message=FALSE}
+## Load REPAC R package
+library("REPAC")
+```
+
+The recount3 project has thousands projects readily avaialable. You can obtain a list of the avaialable projects using the recount3 package.
+
+```{r 'quick_example'}
+## Define the number of parallel cores
+future::plan(multisession, workers = 8)
+## Find all available mouse projects
+mouse_projects <- available_projects(organism = "mouse")
+## Select the project you are interested in,
+## here we use SRP009615 as an example to
+## create a RangedSummarizedExperiment (RSE) object with counts extracted from recount3
+rse <- create_pa_rse(organism = "mouse", project="SRP048707", annotation="data/QAPA_up_mm10.bed", bed_cols= c("seqnames", "start", "end", "ids", "score", "strand")
+)
+## Subset groups of interest
+rse <- rse[,grepl("WT", rse$sra.sample_title)]
+## Test for DPU
+results <- fit_corepad(rse, group="sra.sample_title", covariates = NULL)
+
+## Restore plan to single-core
+future::plan(sequential)
+```
+
+
