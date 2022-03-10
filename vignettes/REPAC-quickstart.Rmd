@@ -55,20 +55,38 @@ After installing `r Biocpkg('REPAC')` you can load the package.
 library("REPAC")
 ```
 
-The recount3 project has thousands projects readily avaialable. You can obtain a list of the avaialable projects using the recount3 package.
+REPAC uses the `r Biocpkg('megadepth')` to extract the counts from recount3 bigWig files. Before starting make sure that megadepth is properly installed.
 
-```{r 'quick_example'}
-## Define the number of parallel cores
-future::plan(multisession, workers = 8)
+```{r 'install-megadepth', message=FALSE}
+## Load REPAC R package
+megadepth::install_megadepth()
+```
+
+The recount3 project has thousands projects readily available. You can obtain a list of the available projects using the recount3 package.
+
+```{r 'projects'}
 ## Find all available mouse projects
 mouse_projects <- available_projects(organism = "mouse")
+```
+
+In order to quantify PAS, REPAC needs a bed file with the positions of small intervals upstream of the PAS. We provide pre-annotated files for hg38 and mm10 genomes (see Imada et al. for details).
+
+```{r 'create_rse'}
+## Define the number of parallel cores
+future::plan(multisession, workers = 8)
+
 ## Select the project you are interested in,
 ## here we use SRP009615 as an example to
 ## create a RangedSummarizedExperiment (RSE) object with counts extracted from recount3
-rse <- create_pa_rse(organism = "mouse", project="SRP048707", annotation="data/QAPA_up_mm10.bed", bed_cols= c("seqnames", "start", "end", "ids", "score", "strand")
+rse <- create_pa_rse(organism = "mouse", project="SRP048707", annotation="data/mm10.bed", bed_cols= c("seqnames", "start", "end", "ids", "score", "strand", "gene_name", "type")
 )
 ## Subset groups of interest
 rse <- rse[,grepl("WT", rse$sra.sample_title)]
+
+## Filter low expressed PA sites
+keep <- edgeR::filterByExpr(se, min.count = 10)
+rse <- rse[keep,]
+
 ## Test for DPU
 results <- fit_corepad(rse, group="sra.sample_title", covariates = NULL)
 
