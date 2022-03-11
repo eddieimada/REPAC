@@ -19,16 +19,14 @@ data from. Supported options are "human" or "mouse".}
 \item{project}{A character(1) with the ID for a given study. See
 \link[recount3:available_projects]{available_projects} from the recount3 package.}
 
-\item{annotation}{A character(1) with the path to a BED file containing
-the coordinates of annotated PA-sites.}
+\item{annotation}{A GenomicRanges object with the coordinates of annotated
+ PA-sites. This object must have a rowData column named "gene_name" with
+ gene-level IDs.}
 
 \item{sample_id}{A character vector with the ID(s) for a given sample inside
 the study. See
 \link[recount3:available_samples]{available_samples} from the recount3 package.}
 
-\item{bed_cols}{A character vector with the column names for the BED file.
-By default it uses the standard fields for a BED file ("chr", "start",
-"end", "ID", "score", "strand").}
 }
 \value{
 A

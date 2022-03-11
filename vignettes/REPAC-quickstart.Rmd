@@ -74,11 +74,12 @@ In order to quantify PAS, REPAC needs a bed file with the positions of small int
 ```{r 'create_rse'}
 ## Define the number of parallel cores
 future::plan(multisession, workers = 8)
-
+# get mm10 PAS
+data(mm10_pa)
 ## Select the project you are interested in,
 ## here we use SRP009615 as an example to
 ## create a RangedSummarizedExperiment (RSE) object with counts extracted from recount3
-rse <- create_pa_rse(organism = "mouse", project="SRP048707", annotation="data/mm10.bed", bed_cols= c("seqnames", "start", "end", "ids", "score", "strand", "gene_name", "type")
+rse <- create_pa_rse(organism = "mouse", project="SRP048707", annotation=mm10_pa, bed_cols= c("seqnames", "start", "end", "ids", "score", "strand", "gene_name", "type")
 )
 ## Subset groups of interest
 rse <- rse[,grepl("WT", rse$sra.sample_title)]

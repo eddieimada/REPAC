@@ -37,20 +37,12 @@
 #' results <- fit_repac(se, group="groups", covariates = "batches")
 #'
 #' @export
-fit_repac <- function(se, gene_name, group, covariates=NULL, method="BH"){
-    # Order PAS on "+" strand
-    rowData(se)$gene_name <- gene_name
-    se <- sort(se)
-    idx <- c(names(se[strand(se) == "+"]), rev(names(se[strand(se) == "-"])))
-    se <- se[idx,]
-    rownames(se) <- unlist(tapply(rowData(se)$gene_name, rowData(se)$gene_name,
-                                  function(x){paste(x, sprintf("%02d", 1:length(x)), sep="_")})[unique(rowData(se)$gene_name)])
+fit_repac <- function(se, group, covariates=NULL, method="BH"){
     n <- table(rowData(se)$gene_name) > 1
     keep <- names(n[n == TRUE])
     se <- se[rowData(se)$gene_name %in% keep,]
     genes <- unique(rowData(se)$gene_name)
     results <- furrr::future_map_dfr(genes, function(id){
-        print(id)
         # Get gene count + pa sites
         mat <- SummarizedExperiment::assays(se)[[1]][which(rowData(se)$gene_name == id),]
         mat <- t(mat+1)
