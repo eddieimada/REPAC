@@ -4,6 +4,14 @@ output: github_document
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE,
+    comment = "#>",
+    out.width = "100%"
+)
+```
+
 The REPAC R/Bioconductor package implements the method described in Imada et al. to test for differential Polyadenylation Usage (DPU).
 
 ## Instalation instructions
@@ -20,4 +28,9 @@ devtools::install_github('eddieimada/REPAC')
 
 ## Citation
 
-Placeholder
+Below is the citation output from using `citation('REPAC')` in R. Please
+run this yourself to check for any updates on how to cite __REPAC__.
+
+```{r 'citation', eval = requireNamespace('REPAC')}
+print(citation('REPAC'), bibtex = TRUE)
+```

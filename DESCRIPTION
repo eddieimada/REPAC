@@ -12,9 +12,12 @@ Description: REPAC enables fast and scalable analysis of APA. REPAC
     relies on methods developed for compositional data to conduct
     statistical tests between poly-A sites.
 License: Artistic-2.0
-RoxygenNote: 7.1.2
-Roxygen: list(markdown = TRUE)
+URL: 
+BugReports: https://support.bioconductor.org/t/REPAC
+biocViews: Software
 Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
 LazyData: true
 Depends:
     R (>= 4.0.3),

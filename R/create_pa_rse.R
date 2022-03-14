@@ -29,7 +29,8 @@
 #' human_projects <- recount3::available_projects()
 #'
 #' ## Find the project you are interested in and obtain PA expression
-#' create_pa_rse(organism = "mouse", project="SRP048707", annotation="mysites.bed")
+#' data(mm10_pa)
+#' create_pa_rse(organism = "mouse", project="SRP048707", annotation=mm10_pa)
 #'
 #' @export
 create_pa_rse <- function(organism=c("human", "mouse"), project=NULL, annotation=NULL, sample_id=NULL, prefix = tempdir()) {
