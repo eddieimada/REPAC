@@ -4,13 +4,10 @@
 \alias{fit_repac}
 \title{Fit model and test for differential polyA usage (DPU)}
 \usage{
-fit_repac(se, gene_name, group, covariates = NULL, method = "BH")
+fit_repac(se, group, covariates = NULL, method = "BH")
 }
 \arguments{
 \item{se}{A (Ranged)SummarizedExperiment object.}
-
-\item{gene_name}{A character vector containing a gene ID to be assigned to each
-PA site.}
 
 \item{group}{A character(1) with the name of the variable indicating the groups
 to be compared. The variable must be a \code{colData()} column of the rse.}
@@ -21,6 +18,9 @@ column of the rse.}
 
 \item{method}{A character(1) with the method to be used to adjust the p-values for
 multiple hypothesis testing. See \link[stats:p.adjust]{p.adjust}}
+
+\item{gene_name}{A character vector containing a gene ID to be assigned to each
+PA site.}
 }
 \value{
 A tibble with the following columns:

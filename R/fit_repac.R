@@ -38,6 +38,13 @@
 #'
 #' @export
 fit_repac <- function(se, group, covariates=NULL, method="BH"){
+    # check inputs
+    stopifnot(
+        "'group' must be a variable in colData()" =
+            group %in% names(colData(se)),
+        "'covariates' must be a variable in colData()" =
+            all(group %in% names(colData(se)))
+    )
     n <- table(rowData(se)$gene_name) > 1
     keep <- names(n[n == TRUE])
     se <- se[rowData(se)$gene_name %in% keep,]

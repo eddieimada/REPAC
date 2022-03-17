@@ -17,6 +17,7 @@
 #' @param sample_id A character vector with the ID(s) for a given sample inside
 #' the study. See
 #' [available_samples][recount3::available_samples] from the recount3 package.
+#' @param prefix A character() with the path to which temporary files should be written.
 #'
 #' @return A
 #'  [RangedSummarizedExperiment-class][SummarizedExperiment::RangedSummarizedExperiment-class]
@@ -35,18 +36,18 @@
 #' @export
 create_pa_rse <- function(organism=c("human", "mouse"), project=NULL, annotation=NULL, sample_id=NULL, prefix = tempdir()) {
     print("Retrieving metadata...")
-    human_samples <- recount3::available_samples(organism = organism)
+    human_samples <- recount3::available_samples(organism = match.arg(organism))
     metadata <- purrr::map_dfr(project, function(id){
     samples <- human_samples[human_samples$project == id,]$external_id
     home <- human_samples[human_samples$project == id, "project_home"][1]
     metadata <- recount3::locate_url(id,
                            project_home = home,
-                           organism = organism,
+                           organism = match.arg(organism),
                            type="metadata",
-                           sample = sample)
+                           sample = sample_id)
     metadata <- recount3::file_retrieve(metadata)
     metadata <- recount3::read_metadata(metadata)
-    metadata$BigWigURL <- recount3::locate_url(id, project_home = home, type="bw", sample = metadata$external_id, organism = organism)
+    metadata$BigWigURL <- recount3::locate_url(id, project_home = home, type="bw", sample = metadata$external_id, organism = match.arg(organism))
     return(metadata)
     })
     keep <- purrr::map_lgl(metadata, ~ all(!is.na(.x)))

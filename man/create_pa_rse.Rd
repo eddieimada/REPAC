@@ -9,7 +9,7 @@ create_pa_rse(
   project = NULL,
   annotation = NULL,
   sample_id = NULL,
-  bed_cols = c("chr", "start", "end", "ID", "score", "strand")
+  prefix = tempdir()
 )
 }
 \arguments{
@@ -20,13 +20,14 @@ data from. Supported options are "human" or "mouse".}
 \link[recount3:available_projects]{available_projects} from the recount3 package.}
 
 \item{annotation}{A GenomicRanges object with the coordinates of annotated
- PA-sites. This object must have a rowData column named "gene_name" with
- gene-level IDs.}
+PA-sites. This object must have a rowData column named "gene_name" with
+gene-level IDs.}
 
 \item{sample_id}{A character vector with the ID(s) for a given sample inside
 the study. See
 \link[recount3:available_samples]{available_samples} from the recount3 package.}
 
+\item{prefix}{A character() with the path to which temporary files should be written.}
 }
 \value{
 A
@@ -44,7 +45,8 @@ for the project through recount3.
 human_projects <- recount3::available_projects()
 
 ## Find the project you are interested in and obtain PA expression
-create_pa_rse(organism = "mouse", project="SRP048707", annotation="mysites.bed")
+data(mm10_pa)
+create_pa_rse(organism = "mouse", project="SRP048707", annotation=mm10_pa)
 
 }
 \author{

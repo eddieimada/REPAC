@@ -1,7 +1,7 @@
 pkgVer <- function(pkg) {
     if (!exists("meta") || is.null(meta)) meta <- packageDescription(pkg)
     ver <- meta$Version
-    paste0('https://github.com/eddieimada/test1/', pkg, ' - R package version ', ver)
+    paste0('https://github.com/eddieimada/REPAC/', pkg, ' - R package version ', ver)
 }
 
 c(
@@ -15,7 +15,7 @@ c(
         ),
         year = 2022,
         journal = "bioRxiv",
-        doi = '',
-        url = "https://www.biorxiv.org/content/10.1101/TODO"
+        doi = '10.1101/2022.03.14.484280',
+        url = "https://www.biorxiv.org/content/10.1101/2022.03.14.484280"
     )
 )
