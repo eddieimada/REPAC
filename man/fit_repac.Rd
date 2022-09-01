@@ -4,46 +4,42 @@
 \alias{fit_repac}
 \title{Fit model and test for differential polyA usage (DPU)}
 \usage{
-fit_repac(se, group, covariates = NULL, method = "BH")
+fit_repac(se, design, contrasts = NULL)
 }
 \arguments{
 \item{se}{A (Ranged)SummarizedExperiment object.}
 
-\item{group}{A character(1) with the name of the variable indicating the groups
-to be compared. The variable must be a \code{colData()} column of the rse.}
+\item{design}{A design matrix indicating the groups
+to be compared. See \link[stats:model.matrix]{model.matrix}.}
 
-\item{covariates}{A character vector with the name of the variables indicating
-the co-variates to be included in the model. The variables must be a \code{colData()}
-column of the rse.}
-
-\item{method}{A character(1) with the method to be used to adjust the p-values for
-multiple hypothesis testing. See \link[stats:p.adjust]{p.adjust}}
-
-\item{gene_name}{A character vector containing a gene ID to be assigned to each
-PA site.}
+\item{contrasts}{A numeric matrix with rows corresponding to coefficients in the
+design matrix and columns containing contrasts. See \link[limma:makeConstrasts]{makeContrasts}.}
 }
 \value{
-A tibble with the following columns:
+A list of tibbles with length equal the number of contrasts.
+Each tibble contains the following columns:
 gene_name - Name of the gene associated with the PAS (e.g., SYMBOL)
 Ref - ID of the reference PAS
 ID - ID of the PAS tested in comparison to \code{Ref}
 cFC - Compositional fold-change in the ilr-space
-mDiff - Mean difference between the coverages in percentage across groups
+mcDiff - Mean difference between the coverages in percentage across groups
 t - T-statistic value
 p.val - p-value
-adj.p.val - Adjusted p-value
 }
 \description{
 \code{fit_repac} transforms the counts obtained from \code{create_pa_rse()} into compositions
-and performs an isometric log ratio transformation prior to fitting the model and
-testing via ANOVA.
+and performs an isometric log ratio transformation prior to fitting the model
 }
 \examples{
 ## fit model and test for DPU
-results <- fit_repac(se, group="groups", covariates = NULL)
-
-#' ## fit model and test for DPU, correcting for batch effects
-results <- fit_repac(se, group="groups", covariates = "batches")
+groups <- rep(c("A", "B"), each=5)
+dMat <- model.matrix(~ 0+groups)
+colnames(dMat) <-  gsub("groups", "",colnames(dMat))
+cMat <- makeContrasts(
+    levels=colnames(dMat),
+    BvsS= B - A
+)
+results <- fit_repac(se, dMat, cMat)
 
 }
 \author{

@@ -69,7 +69,7 @@ The recount3 project has thousands projects readily available. You can obtain a 
 mouse_projects <- available_projects(organism = "mouse")
 ```
 
-In order to quantify PAS, REPAC needs a bed file with the positions of small intervals upstream of the PAS. We provide pre-annotated files for hg38 and mm10 genomes (see Imada et al. for details).
+In order to quantify PAS, REPAC requires a `GRanges` (see `r Biocpkg('GenomicRanges')`) object with the positions of intervals upstream of the PAS. We provide pre-annotated 50bp intervals for the hg38 and mm10 genomes (see Imada et al. for details).
 
 ```{r 'create_rse'}
 ## Define the number of parallel cores
@@ -79,20 +79,55 @@ data(mm10_pa)
 ## Select the project you are interested in,
 ## here we use SRP009615 as an example to
 ## create a RangedSummarizedExperiment (RSE) object with counts extracted from recount3
-rse <- create_pa_rse(organism = "mouse", project="SRP048707", annotation=mm10_pa, bed_cols= c("seqnames", "start", "end", "ids", "score", "strand", "gene_name", "type")
-)
+rse <- create_pa_rse(organism = "mouse", project="SRP048707", annotation=mm10_pa)
+```
+
+```{r 'analysis'}
 ## Subset groups of interest
 rse <- rse[,grepl("WT", rse$sra.sample_title)]
-
+## Rename groups
+rse$sra.sample_title <- dplyr::case_when(
+    grepl("Ex vivo", rse$sra.sample_title) ~ "Control",
+    grepl("LPS", rse$sra.sample_title) ~ "LPS")
 ## Filter low expressed PA sites
 keep <- edgeR::filterByExpr(se, min.count = 10)
 rse <- rse[keep,]
 
+## fit model and test for DPU
+groups <- rse$sra.sample_title
+dMat <- model.matrix(~ 0+groups)
+colnames(dMat) <-  gsub("groups", "",colnames(dMat))
+cMat <- limma::makeContrasts(
+    levels=colnames(dMat),
+    LPSvsControl= LPS - Control
+)
 ## Test for DPU
-results <- fit_corepad(rse, group="sra.sample_title", covariates = NULL)
+results <- fit_repac(se, dMat, cMat)
+## Resolve how PAS are compared
+results <- resolve_comparisons(results)
 
 ## Restore plan to single-core
 future::plan(sequential)
 ```
+
+# External datasets
+
+REPAC was originally designed to take advantage of the recount3 resources. Although recount3 collection encompasses over 750,000 samples users may wish to use REPAC with their own data or a data set not included in recount3. This can be done by quantifying the PAS intervals with an external tool, such as `r Biocpkg('Rsubread')`. REPAC provides a wrapper function around the `featureCounts` function to provide an output compatible with `fit_repac`.
+
+```{r 'external-data', eval=FALSE}
+se <- rse_from_bam(bams, hg38_pa, pheno, strandSpecific = 0,
+                   allowMultiOverlap = F, fraction = F,
+                   countMultiMappingReads=F, isPairedEnd = T, 
+                   nthreads = 8, countReadPairs = T,  
+                   requireBothEndsMapped = F)
+````
+
+# Additional information
+
+Q: Can I provide intervals longer than 50bp?
+A: Yes. REPAC will extract the counts for any interval provided to it. It is up to the user to make sure these intervals provides a reasonable quantification of polyA activity. We have not tested other interval sizes, so we recommend caution when altering the original strategy.
+
+Q: Does REPAC supports stranded libraries?
+A: Yes and no. Due to technical constraints, recount3 data is stored in a bigWig format, which does not support quantification by strand. Nevertheless, the user is still able to perform stranded quantification through other venues (see External datasets) and provide it to the `fit_repac` function.
 
 

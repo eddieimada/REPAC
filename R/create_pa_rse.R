@@ -2,7 +2,7 @@
 #'
 #' `create_pa_rse creates a RangedSummarizedExperiment object by extracting
 #'  expression information from recount3 bigWig files from annotated polyA
-#'  sites provided through a BED file. It will also pull relevant metadata
+#'  sites provided through a GRanges object. It will also pull relevant metadata
 #'  for the project through recount3.
 #'
 #' @name create_pa_rse
@@ -12,7 +12,7 @@
 #' @param project A character(1) with the ID for a given study. See
 #' [available_projects][recount3::available_projects] from the recount3 package.
 #' @param annotation A GenomicRanges object with the coordinates of annotated
-#' PA-sites. This object must have a rowData column named "gene_name" with
+#' PA-sites. This object must have an elementMetadata column named "gene_name" with
 #' gene-level IDs.
 #' @param sample_id A character vector with the ID(s) for a given sample inside
 #' the study. See
@@ -36,18 +36,19 @@
 #' @export
 create_pa_rse <- function(organism=c("human", "mouse"), project=NULL, annotation=NULL, sample_id=NULL, prefix = tempdir()) {
     print("Retrieving metadata...")
-    human_samples <- recount3::available_samples(organism = match.arg(organism))
+    org <- match.arg(organism)
+    human_samples <- recount3::available_samples(organism = org)
     metadata <- purrr::map_dfr(project, function(id){
     samples <- human_samples[human_samples$project == id,]$external_id
     home <- human_samples[human_samples$project == id, "project_home"][1]
     metadata <- recount3::locate_url(id,
                            project_home = home,
-                           organism = match.arg(organism),
+                           organism = org,
                            type="metadata",
                            sample = sample_id)
     metadata <- recount3::file_retrieve(metadata)
     metadata <- recount3::read_metadata(metadata)
-    metadata$BigWigURL <- recount3::locate_url(id, project_home = home, type="bw", sample = metadata$external_id, organism = match.arg(organism))
+    metadata$BigWigURL <- recount3::locate_url(id, project_home = home, type="bw", sample = metadata$external_id, organism = org)
     return(metadata)
     })
     keep <- purrr::map_lgl(metadata, ~ all(!is.na(.x)))
@@ -64,7 +65,7 @@ create_pa_rse <- function(organism=c("human", "mouse"), project=NULL, annotation
     ord <- apa_gr
     GenomicRanges::strand(ord) <- "*"
     apa_gr <- apa_gr[names(sort(ord))]
-    write_tsv(data.frame(apa_gr)[c("seqnames", "start", "end")], file = file.path(prefix, "annotation.bed"), col_names = F)
+    readr::write_tsv(data.frame(apa_gr)[c("seqnames", "start", "end")], file = file.path(prefix, "annotation.bed"), col_names = F)
     print("Retrieving counts...")
     mat <- furrr::future_map_dfc(seq_along(urls), function(x) {
         y <- megadepth::get_coverage(urls[[x]], op = "sum",
@@ -84,10 +85,17 @@ create_pa_rse <- function(organism=c("human", "mouse"), project=NULL, annotation
                                 rowRanges = apa_gr
     )
     se <- sort(se)
-    idx <- c(names(se[strand(se) == "+"]), rev(names(se[strand(se) == "-"])))
+    idx <- c(names(se[GenomicRanges::strand(se) == "+"]),
+             rev(names(se[GenomicRanges::strand(se) == "-"])))
     se <- se[idx,]
-    rownames(se) <- unlist(tapply(rowData(se)$gene_name, rowData(se)$gene_name,
-                                  function(x){paste(x, sprintf("%02d", 1:length(x)), sep="_")})[unique(rowData(se)$gene_name)])
+rownames(se) <- unlist(
+    tapply(SummarizedExperiment::rowData(se)$gene_name,
+           SummarizedExperiment::rowData(se)$gene_name,
+           function(x){paste(x, sprintf("%02d", 1:length(x)),
+                             sep="_")})[unique(
+                                 SummarizedExperiment::rowData(se)$gene_name
+                                 )]
+    )
     se <- se[sort(names(se))]
     return(se)
 }

@@ -1,89 +1,95 @@
 #' Fit model and test for differential polyA usage (DPU)
 #'
 #' `fit_repac` transforms the counts obtained from `create_pa_rse()` into compositions
-#' and performs an isometric log ratio transformation prior to fitting the model and
-#' testing via ANOVA.
+#' and performs an isometric log ratio transformation prior to fitting the model
 #'
 #' @name fit_repac
 #'
 #' @param se A (Ranged)SummarizedExperiment object.
-#' @param gene_name A character vector containing a gene ID to be assigned to each
-#' PA site.
-#' @param group A character(1) with the name of the variable indicating the groups
-#' to be compared. The variable must be a `colData()` column of the rse.
-#' @param covariates A character vector with the name of the variables indicating
-#' the co-variates to be included in the model. The variables must be a `colData()`
-#' column of the rse.
-#' @param method A character(1) with the method to be used to adjust the p-values for
-#' multiple hypothesis testing. See [p.adjust][stats::p.adjust]
+#' @param design A design matrix indicating the groups
+#' to be compared. See [model.matrix][stats::model.matrix].
+#' @param contrasts A numeric matrix with rows corresponding to coefficients in the
+#' design matrix and columns containing contrasts. See [makeContrasts][limma::makeConstrasts].
 #'
-#' @return A tibble with the following columns:
+#' @return A list of tibbles with length equal the number of contrasts.
+#' Each tibble contains the following columns:
 #' gene_name - Name of the gene associated with the PAS (e.g., SYMBOL)
 #' Ref - ID of the reference PAS
 #' ID - ID of the PAS tested in comparison to `Ref`
 #' cFC - Compositional fold-change in the ilr-space
-#' mDiff - Mean difference between the coverages in percentage across groups
+#' mcDiff - Mean difference between the coverages in percentage across groups
 #' t - T-statistic value
 #' p.val - p-value
-#' adj.p.val - Adjusted p-value
 #'
 #' @author Eddie Imada
 #'
 #' @examples
 #' ## fit model and test for DPU
-#' results <- fit_repac(se, group="groups", covariates = NULL)
-#'
-#' #' ## fit model and test for DPU, correcting for batch effects
-#' results <- fit_repac(se, group="groups", covariates = "batches")
+#' groups <- rep(c("A", "B"), each=5)
+#' dMat <- model.matrix(~ 0+groups)
+#' colnames(dMat) <-  gsub("groups", "",colnames(dMat))
+#' cMat <- makeContrasts(
+#'     levels=colnames(dMat),
+#'     BvsS= B - A
+#' )
+#' results <- fit_repac(se, dMat, cMat)
 #'
 #' @export
-fit_repac <- function(se, group, covariates=NULL, method="BH"){
+fit_repac <- function(se, design, contrasts=NULL){
     # check inputs
-    stopifnot(
-        "'group' must be a variable in colData()" =
-            group %in% names(colData(se)),
-        "'covariates' must be a variable in colData()" =
-            all(group %in% names(colData(se)))
-    )
-    n <- table(rowData(se)$gene_name) > 1
+    dMat <- design
+    cMat <- contrasts
+    n <- table(SummarizedExperiment::rowData(se)$gene_name) > 1
     keep <- names(n[n == TRUE])
-    se <- se[rowData(se)$gene_name %in% keep,]
-    genes <- unique(rowData(se)$gene_name)
+    se <- se[SummarizedExperiment::rowData(se)$gene_name %in% keep,]
+    genes <- unique(SummarizedExperiment::rowData(se)$gene_name)
     results <- furrr::future_map_dfr(genes, function(id){
         # Get gene count + pa sites
-        mat <- SummarizedExperiment::assays(se)[[1]][which(rowData(se)$gene_name == id),]
+        mat <- SummarizedExperiment::assays(se)[[1]][
+            which(SummarizedExperiment::rowData(se)$gene_name == id),
+            ]
         mat <- t(mat+1)
-        ### Select reference pa site
-        ref <- 1
-        cd <- SummarizedExperiment::colData(se)
-        res <- purrr::map_dfr(seq_along(colnames(mat)[-1]), function(idx){
-            nm <- colnames(mat)[idx+1]
-            ref.nms <- colnames(mat)[ref]
-            #weight <- gene.weight[colnames(mat)[ref],]
-            counts <- cbind(mat[,ref],mat[,idx+1])
+        res <- purrr::map(data.frame(combn(seq_along(colnames(mat)), 2)), function(idx) {
+            nm <- colnames(mat)[idx[2]]
+            ref.nms <- colnames(mat)[idx[1]]
+            counts <- cbind(mat[, idx[1]], mat[, idx[2]])
             comp <- compositions::acomp(counts)
-            icomp <- compositions::ilr(comp)[,1]
-            if (length(covariates) != 0) {
-                fmla <- reformulate(c(covariates, group), response = "icomp")
-                fit <- lm(fmla, data=model.frame(fmla, cd))
+            icomp <- compositions::ilr(comp)[, 1]
+            ### Extract results
+            if (length(contrasts) == 0) {
+                fit <- limma::lmFit(icomp, dMat)
+                ref.mu <- compositions::ilrInv(mean(icomp[which(rowSums(dMat)==1)]))[2]
+                mDiff <- apply(dMat[,as.logical(attributes(dMat)$assign)],2, function(l){
+                    ref.mu-compositions::ilrInv(mean(icomp[as.logical(l)]))[2]
+                })
             } else {
-                fmla <- reformulate(group, response = "icomp")
-                fit <- lm(fmla, data=model.frame(fmla, cd))
+                fit <- limma::lmFit(icomp, dMat)
+                fit <- limma::contrasts.fit(fit, cMat)
+                mu <- apply(dMat,2, function(l){
+                    compositions::ilrInv(mean(icomp[as.logical(l)]))[2]
+                })
+                mDiff <- apply(cMat,2,function(c){
+                    sum(mu*c)
+                })
             }
-            mod <- car::Anova(fit)
-            p.val <- mod[[group,"Pr(>F)"]]
-            if (p.val > 0.1) {
-                ref <<- idx+1
-            }
-            ci <- grep(group, names(fit$coefficients))
-            du <- compositions::ilrInv(fit$coefficients[1] + fit$coefficients[ci])[2] - ilrInv(fit$coefficients[1])[2]
-            cFC <- fit$coefficients[ci]
-            Ts <- round(summary(fit)$coefficients[[ci, "t value"]], 3)
-            tibble::tibble(gene_name=id, Ref=ref.nms, ID=nm, cFC=cFC, mDiff=du, "t"=Ts, p.val=p.val)
+            fit <- limma::eBayes(fit)
+            coefs <- colnames(fit$coefficients)
+            tG <- map(coefs, function(x, y) {
+                results <- limma::topTable(y, coef=x, n=Inf)
+                names(results)[1] <- "cFC"
+                results <- tibble::add_column(results, Ref=ref.nms, Site=nm, .before = 1 )
+                results <- tibble::add_column(results, mcDiff=mDiff[x], .after = "cFC" )
+                results <- tibble::add_column(results, Contrast=x)
+
+            }, y=fit)
+            names(tG) <- coefs
+            return(tG)
         })
-        res$adj.p.val <- p.adjust(res$p.val, method = method)
+        res <- dplyr::bind_rows(flatten(res))
+        res <- tibble::add_column(res, gene_name=gsub("_.+", "", res$Ref), .before = 1)
         res
     },.progress = TRUE)
-
+    results <- tibble::tibble(results[-c(5,8,9)])
+    results <- split(results[,-7], results$Contrast)
     return(results)
 }

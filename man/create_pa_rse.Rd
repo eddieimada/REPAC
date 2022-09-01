@@ -20,7 +20,7 @@ data from. Supported options are "human" or "mouse".}
 \link[recount3:available_projects]{available_projects} from the recount3 package.}
 
 \item{annotation}{A GenomicRanges object with the coordinates of annotated
-PA-sites. This object must have a rowData column named "gene_name" with
+PA-sites. This object must have an elementMetadata column named "gene_name" with
 gene-level IDs.}
 
 \item{sample_id}{A character vector with the ID(s) for a given sample inside
@@ -37,7 +37,7 @@ object.
 \description{
 `create_pa_rse creates a RangedSummarizedExperiment object by extracting
 expression information from recount3 bigWig files from annotated polyA
-sites provided through a BED file. It will also pull relevant metadata
+sites provided through a GRanges object. It will also pull relevant metadata
 for the project through recount3.
 }
 \examples{

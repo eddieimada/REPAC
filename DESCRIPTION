@@ -1,7 +1,7 @@
 Package: REPAC
 Type: Package
 Title: Differential Alternative Polyadenylation Analysis From Compositions
-Version: 0.1.0
+Version: 0.99.0
 Authors@R: 
     c(
     person("Eddie", "Imada", role = c("aut", "cre"), 
@@ -13,21 +13,22 @@ Description: REPAC enables fast and scalable analysis of APA. REPAC
     statistical tests between poly-A sites.
 License: Artistic-2.0
 URL: 
-BugReports: https://support.bioconductor.org/t/REPAC
-biocViews: Software
+BugReports: https://github.com/eddieimada/REPAC/issues
+biocViews: Software, Regression, DifferentialExpression, RNASeq, Transcriptomics
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
-LazyData: true
+LazyData: false
 Depends:
-    R (>= 4.0.3),
-    SummarizedExperiment,
-    compositions,
-    future,
+    R (>= 4.0.0)
+Imports:
     purrr,
-    furrr,
+    compositions,
     recount3,
     megadepth,
-    car,
+    SummarizedExperiment,
+    future,
+    furrr,
     readr,
-    tibble
+    limma,
+    Rsubread

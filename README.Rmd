@@ -12,7 +12,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-The REPAC R/Bioconductor package implements the method described in Imada et al. to test for differential Polyadenylation Usage (DPU).
+The REPAC R package implements the method described in [Imada](https://www.biorxiv.org/content/10.1101/2022.03.14.484280v1) et al. to test for differential Polyadenylation Usage (DPU).
 
 ## Instalation instructions
 

@@ -2,3 +2,5 @@
 
 export(create_pa_rse)
 export(fit_repac)
+export(resolve_comparisons)
+export(rse_from_bam)
