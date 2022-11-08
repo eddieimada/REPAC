@@ -90,7 +90,7 @@ rse$sra.sample_title <- dplyr::case_when(
     grepl("Ex vivo", rse$sra.sample_title) ~ "Control",
     grepl("LPS", rse$sra.sample_title) ~ "LPS")
 ## Filter low expressed PA sites
-keep <- edgeR::filterByExpr(se, min.count = 10)
+keep <- edgeR::filterByExpr(rse, min.count = 10)
 rse <- rse[keep,]
 
 ## fit model and test for DPU
@@ -102,7 +102,7 @@ cMat <- limma::makeContrasts(
     LPSvsControl= LPS - Control
 )
 ## Test for DPU
-results <- fit_repac(se, dMat, cMat)
+results <- fit_repac(rse, dMat, cMat)
 ## Resolve how PAS are compared
 results <- resolve_comparisons(results)
 

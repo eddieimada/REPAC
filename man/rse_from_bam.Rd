@@ -23,7 +23,7 @@ A
 object.
 }
 \description{
-`rse_from_bam creates a RangedSummarizedExperiment object by extracting
+\code{rse_from_bam} creates a RangedSummarizedExperiment object by extracting
 counts from bam files of annotated polyA sites provided through an annotation.
 }
 \examples{

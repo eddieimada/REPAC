@@ -1,6 +1,6 @@
 #' Create a RangedSummarizedExperiment from bam files
 #'
-#' `rse_from_bam creates a RangedSummarizedExperiment object by extracting
+#' `rse_from_bam` creates a RangedSummarizedExperiment object by extracting
 #'  counts from bam files of annotated polyA sites provided through an annotation.
 #'
 #'

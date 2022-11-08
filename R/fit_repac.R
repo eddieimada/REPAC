@@ -30,7 +30,7 @@
 #' colnames(dMat) <-  gsub("groups", "",colnames(dMat))
 #' cMat <- makeContrasts(
 #'     levels=colnames(dMat),
-#'     BvsS= B - A
+#'     BvsA= B - A
 #' )
 #' results <- fit_repac(se, dMat, cMat)
 #'
@@ -89,7 +89,7 @@ fit_repac <- function(se, design, contrasts=NULL){
         res <- tibble::add_column(res, gene_name=gsub("_.+", "", res$Ref), .before = 1)
         res
     },.progress = TRUE)
-    results <- tibble::tibble(results[-c(5,8,9)])
-    results <- split(results[,-7], results$Contrast)
+    results <- tibble::tibble(results[-c(6,9,10)])
+    results <- split(results[,-8], results$Contrast)
     return(results)
 }

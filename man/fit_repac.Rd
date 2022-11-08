@@ -37,7 +37,7 @@ dMat <- model.matrix(~ 0+groups)
 colnames(dMat) <-  gsub("groups", "",colnames(dMat))
 cMat <- makeContrasts(
     levels=colnames(dMat),
-    BvsS= B - A
+    BvsA= B - A
 )
 results <- fit_repac(se, dMat, cMat)
 
