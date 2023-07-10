@@ -59,7 +59,7 @@ fit_repac <- function(se, design, contrasts=NULL){
             if (length(contrasts) == 0) {
                 fit <- limma::lmFit(icomp, dMat)
                 ref.mu <- compositions::ilrInv(mean(icomp[which(rowSums(dMat)==1)]))[2]
-                mDiff <- apply(dMat[,as.logical(attributes(dMat)$assign)],2, function(l){
+                mDiff <- apply(dMat[,as.logical(attributes(dMat)$assign), drop=F],2, function(l){
                     ref.mu-compositions::ilrInv(mean(icomp[as.logical(l)]))[2]
                 })
             } else {
