@@ -35,11 +35,11 @@ print(citation('REPAC'), bibtex = TRUE)
 #> A BibTeX entry for LaTeX users is
 #> 
 #>   @Article{,
-#>     title = {Unleashing alternative polyadenylation analyses with REPAC},
+#>     title = {REPAC: analysis of alternative polyadenylation from RNA-sequencing data},
 #>     author = {Eddie L. Imada and Christopher Wilks and Ben Langmead and Luigi Marchionni},
-#>     year = {2022},
-#>     journal = {bioRxiv},
-#>     doi = {10.1101/2022.03.14.484280},
-#>     url = {https://www.biorxiv.org/content/10.1101/2022.03.14.484280},
+#>     year = {2023},
+#>     journal = {Genome Biology},
+#>     doi = {10.1186/s13059-023-02865-5},
+#>     url = {https://link.springer.com/article/10.1186/s13059-023-02865-5},
 #>   }
 ```
