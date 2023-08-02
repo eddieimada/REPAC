@@ -13,7 +13,7 @@ c(
             as.person("Ben Langmead"),
             as.person("Luigi Marchionni")
         ),
-        year = 2022,
+        year = 2023,
         journal = "Genome Biology",
         doi = '10.1186/s13059-023-02865-5',
         url = "https://link.springer.com/article/10.1186/s13059-023-02865-5"
