@@ -6,7 +6,7 @@ pkgVer <- function(pkg) {
 
 c(
     bibentry(bibtype="article",
-        title = "Unleashing alternative polyadenylation analyses with REPAC",
+        title = "REPAC: analysis of alternative polyadenylation from RNA-sequencing data",
         author = personList(
             as.person("Eddie L. Imada"),
             as.person("Christopher Wilks"),
@@ -14,8 +14,8 @@ c(
             as.person("Luigi Marchionni")
         ),
         year = 2022,
-        journal = "bioRxiv",
-        doi = '10.1101/2022.03.14.484280',
-        url = "https://www.biorxiv.org/content/10.1101/2022.03.14.484280"
+        journal = "Genome Biology",
+        doi = '10.1186/s13059-023-02865-5',
+        url = "https://link.springer.com/article/10.1186/s13059-023-02865-5"
     )
 )
